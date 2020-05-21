@@ -160,8 +160,8 @@ byte UpdateEE;
 int8_t numberCharSet;
 
 // Me added
-byte showSTOP = 0;
-byte STOPcounting = 0;
+bool showSTOP = false;
+bool STOPcounting = false;
 unsigned long prevSTOP = millis() / 2;
 unsigned long STOPpause = millis() / 2;
 char STOPstringTemp[5] = "00000";
@@ -667,13 +667,13 @@ void checkButtons(void )
         if (!modeShowAlarmTime) {
           if (showSTOP)
           {
-            showSTOP = 0;
+            showSTOP = false;
             RedrawNow = 1;
             DisplayWordDP("_____");
           }
           else
           {
-            showSTOP = 1;
+            showSTOP = true;
             NextSTOPFlash = milliTemp + 500;
             RedrawNow = 1;
           }
@@ -724,7 +724,7 @@ void checkButtons(void )
           if (modeLEDTest) // If we are currently in the LED Test mode,
           {
             modeLEDTest = 0;  //  Exit LED Test Mode
-            showSTOP = 0;
+            showSTOP = false;
             RedrawNow = 1;
             DisplayWord ("-END-", 1500);
           }
