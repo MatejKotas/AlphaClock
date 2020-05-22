@@ -1,61 +1,59 @@
- /*
+/*
 
- AlphaClock.ino 
- 
- -- Alpha Clock Five Firmware, version 2.2 --
- 
- Version 2.2.0 - November 15, 2019
- Copyright (c) 2019 Windell H. Oskay.  All right reserved.
- http://www.evilmadscientist.com/
- 
- ------------------------------------------------------------
- 
- Designed for Alpha Clock Five, a five letter word clock designed by
- Evil Mad Scientist Laboratories http://www.evilmadscientist.com
- 
- Thanks to Trammell Hudson for inspiration and helpful discussion.
- https://bitbucket.org/hudson/alphaclock
- 
- 
- Thanks to William Phelps - wm (at) usa.net, for several important 
- bug fixes.    https://github.com/wbphelps/AlphaClock
- 
- ------------------------------------------------------------
+  AlphaClock.ino
 
-Target: ATmega644[potentially with suffixes], clock at 16 MHz.
+  -- Alpha Clock Five Firmware, version 2.2 --
 
-Environment
+  Version 2.2.0 - November 15, 2019
+  Copyright (c) 2019 Windell H. Oskay.  All right reserved.
+  http://www.evilmadscientist.com/
 
-Designed to work with Arduino 1.8; untested with other versions.
- 
-Install the MightyCore additions for Arduino:
-https://github.com/MCUdude/MightyCore#how-to-install
+  ------------------------------------------------------------
 
-Tools > Board> MightyCore: ATmega644
-Clock: External 16 MHz
-BOD: 2.7V
-Variant: 644 (select the actual chip on your board)
-Pinout: Sanguino pinout
+  Designed for Alpha Clock Five, a five letter word clock designed by
+  Evil Mad Scientist Laboratories http://www.evilmadscientist.com
 
-Download and install the Time library:
-https://github.com/PaulStoffregen/Time
-
-Download and install the DS1307 library:
-https://github.com/PaulStoffregen/DS1307RTC
-
-(The above two can be added to your regular Arduino libraries folder.)
+  Thanks to Trammell Hudson for inspiration and helpful discussion.
+  https://bitbucket.org/hudson/alphaclock
 
 
-For additional requirements, please see:
- http://wiki.evilmadscience.com/Alpha_Clock_Firmware_v2
+  Thanks to William Phelps - wm (at) usa.net, for several important
+  bug fixes.    https://github.com/wbphelps/AlphaClock
 
- Note in particular that the Alpha Clock Five bootloader uses
- a typical upload speed of 57200 baud.
- 
+  ------------------------------------------------------------
 
- ------------------------------------------------------------
+  Target: ATmega644[potentially with suffixes], clock at 16 MHz.
+
+  Environment
+
+  Designed to work with Arduino 1.8; untested with other versions.
+
+  Install the MightyCore additions for Arduino:
+  https://github.com/MCUdude/MightyCore#how-to-install
+
+  Tools > Board> MightyCore: ATmega644
+  Clock: External 16 MHz
+  BOD: 2.7V
+  Variant: 644 (select the actual chip on your board)
+  Pinout: Sanguino pinout
+
+  Download and install the Time library:
+  https://github.com/PaulStoffregen/Time
+
+  Download and install the DS1307 library:
+  https://github.com/PaulStoffregen/DS1307RTC
+
+  (The above two can be added to your regular Arduino libraries folder.)
 
 
+  For additional requirements, please see:
+  http://wiki.evilmadscience.com/Alpha_Clock_Firmware_v2
+
+  Note in particular that the Alpha Clock Five bootloader uses
+  a typical upload speed of 57200 baud.
+
+
+  ------------------------------------------------------------
 
 
 
@@ -63,30 +61,32 @@ For additional requirements, please see:
 
 
 
- 
- 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- This library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with this library.  If not, see <http://www.gnu.org/licenses/>.
- 
- 
- 
- Note that the two word lists included with this distribution are NOT licensed under the GPL.
- - The list in fiveletterwords.h is derived from SCOWL, http://wordlist.sourceforge.net 
- Please see README-SCOWL.txt for copyright restrictions on the use and redistribution of this word list.
- - The alternative list in fiveletterwordspd.h is in the PUBLIC DOMAIN, 
- and cannot be restricted by the GPL or other copyright licenses.    
- 	  
- */
+
+
+
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this library.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+  Note that the two word lists included with this distribution are NOT licensed under the GPL.
+  - The list in fiveletterwords.h is derived from SCOWL, http://wordlist.sourceforge.net
+  Please see README-SCOWL.txt for copyright restrictions on the use and redistribution of this word list.
+  - The alternative list in fiveletterwordspd.h is in the PUBLIC DOMAIN,
+  and cannot be restricted by the GPL or other copyright licenses.
+
+*/
 
 
 #include "alphafive.h"      // Alpha Clock Five library
@@ -159,21 +159,20 @@ byte modeLEDTest;
 byte UpdateEE;
 int8_t numberCharSet;
 
-// Me added
+// Stopwatch
 bool showSTOP = false;
 bool STOPcounting = false;
-unsigned long prevSTOP = millis() / 2;
-unsigned long STOPpause = millis() / 2;
-char STOPstringTemp[5] = "00000";
-char STOPstring[11] = "00000000000";
-char STOPstringTempDP[5] = "_____";
-char STOPstringLap[11] = "00000000000";
+unsigned long startSTOP = 0;
+unsigned long STOPpause = 0;
 bool STOPlap = false;
+bool changeSTOPlap = false;
+char STOPlapstring[11]  = "00000000000";
 const char STOPstringDP[11] = "_13212121__";
 int STOPshifted = 0;
 bool FlashSTOPSeperator = false;
-unsigned long NextSTOPFlash = millis() / 2;
+unsigned long NextSTOPFlash = 0;
 
+// Brightness adjustment
 byte night = 2;
 int NightStart = 9 + 12;
 int NightEnd = 6;
@@ -241,129 +240,89 @@ byte SoundSequence;
 
 void calculateSTOP()
 {
-  unsigned long difference = milliTemp - prevSTOP;
-  if (STOPcounting) {
+  char STOPstring[11] = "00000000000"; // Value dosn't matter
+  if (STOPlap) {
     for (int i = 0; i < 11; i++) {
-      STOPstring[i] -= '0';
+      STOPstring[i] = STOPlapstring[i];
     }
-
-    if (difference >= 10) {
-      difference -= 10;
-      STOPstring[10]++;
-    }
-
-    if (STOPstring[10] >= 10) {
-      STOPstring[10] -= 10;
-      STOPstring[9]++;
-    }
-
-    if (STOPstring[9] >= 10) {
-      STOPstring[9] = 0;
-      STOPstring[8]++;
-
-      if (STOPstring[8] >= 10) {
-        STOPstring[8] = 0;
-        STOPstring[7]++;
-
-        if (STOPstring[7] >= 6) {
-          STOPstring[7] = 0;
-          STOPstring[6]++;
-
-          if (STOPstring[6] >= 10) {
-            STOPstring[6] = 0;
-            STOPstring[5]++;
-
-            if (STOPshifted == 0) {
-              STOPshifted = 2;
-            }
-
-            if (STOPstring[5] >= 6) {
-              STOPstring[5] = 0;
-              STOPstring[4]++;
-
-              if (STOPstring[4] >= 10) {
-                STOPstring[4] = 0;
-                STOPstring[3]++;
-
-                if (STOPshifted == 2) {
-                  STOPshifted = 4;
-                }
-              }
-              if (STOPstring[3] >= 2 && STOPstring[4] >= 4) {
-
-                STOPstring[3] = 0;
-                STOPstring[4] = 0;
-
-                STOPstring[2]++;
-
-                if (STOPstring[2] >= 7) {
-                  STOPstring[2] = 0;
-                  STOPstring[1]++;
-
-                  if (STOPshifted == 4) {
-                    STOPshifted = 6;
-                  }
-
-                  if (STOPstring[1] >= 10) {
-                    STOPstring[1] = 0;
-                    STOPstring[0]++;
-
-                    if (STOPstring[0] == 10) {
-                      STOPstring[0] = 0;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    for (int i = 0; i < 11; i++) {
-      STOPstring[i] += '0';
-    }
-    prevSTOP = milliTemp - difference;
   }
+  else {
+    unsigned long difference = 0;
 
-  for (int i = 0; i < 5; i++) {
-    if (!STOPlap) {
-      STOPstringTemp[i] = STOPstring[(6 - STOPshifted) + i];
+    if (STOPcounting) {
+      difference = milliTemp - startSTOP;
     }
     else {
-      STOPstringTemp[i] = STOPstringLap[(6 - STOPshifted) + i];
+      difference = STOPpause - startSTOP;
     }
-    STOPstringTempDP[i] = STOPstringDP[(6 - STOPshifted) + i];
+
+    STOPstring[10] = (difference % ((long)100)) / 10; // Centiseconds
+
+    STOPstring[9] = (difference % ((long)1000)) / 100; // Deciseconds
+
+    STOPstring[8] = (difference % (((long)1000) * 10)) / 1000; // Seconds
+
+    STOPstring[7] = (difference % (((long)1000) * 10 * 6)) / (1000 * 10); // 10 Seconds
+
+    STOPstring[6] = (difference % (((long)1000) * 10 * 6 * 10)) / 100000; // Minutes
+
+    STOPstring[5] = (difference % (((long)1000) * 10 * 6 * 10 * 6)) / 1000000; // 10 Minutes
+
+    int hours = (difference % (((long)1000) * 10 * 6 * 10 * 6 * 24)) / 10000000; // Hour
+    STOPstring[4] = hours % 10;
+    hours -= STOPstring[4];
+
+    STOPstring[3] = hours / 10; // 10 Hours
+
+    STOPstring[2] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7)) / 100000000; // Days
+
+    STOPstring[1] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10)) / 1000000000; // Weeks
+
+    STOPstring[0] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10 * 10)) / 10000000000; // 10 Weeks
   }
 
-  if (FlashSTOPSeperator && STOPcounting) {
+  if (changeSTOPlap) {
+    for (int i = 0; i < 11; i++) {
+      STOPlapstring[i] = STOPstring[i];
+    }
+    STOPlap = !STOPlap;
+    changeSTOPlap = false;
+  }
+
+  if (milliTemp > NextSTOPFlash && STOPcounting) {
+    FlashSTOPSeperator = !FlashSTOPSeperator;
+    NextSTOPFlash = milliTemp + 500;
+  }
+
+  char STOPstringTemp[5] = "00000";
+  char STOPstringTempDP[5] = "_____";
+  for (int i = 0; i < 5; i++) {
+    STOPstringTemp[i] = STOPstring[i + (6 - STOPshifted)] + '0';
+  }
+
+  if (FlashSTOPSeperator || !STOPcounting) {
     for (int i = 0; i < 5; i++) {
-      STOPstringTempDP[i] = '_';
-    }
-    if (milliTemp >= NextSTOPFlash) {
-      FlashSTOPSeperator = false;
-      NextSTOPFlash = milliTemp + 500;
+      STOPstringTempDP[i] = STOPstringDP[i + (6 - STOPshifted)];
     }
   }
-  if (!FlashSTOPSeperator) {
-    if (STOPstringTempDP[0] == '2') {
-      STOPstringTempDP[0] = '_';
-    }
-    else if (STOPstringTempDP[0] == '3') {
-      STOPstringTempDP[0] = '1';
-    }
-    if (STOPstringTempDP[4] == '1') {
-      STOPstringTempDP[4] = '_';
-    }
-    else if (STOPstringTempDP[4] == '3') {
-      STOPstringTempDP[4] = '2';
-    }
 
-    if (milliTemp >= NextSTOPFlash) {
-      FlashSTOPSeperator = true;
-      NextSTOPFlash = milliTemp + 500;
-    }
+  if (STOPstringTempDP[0] == '2') {
+    STOPstringTempDP[0] = '_';
   }
+  else if (STOPstringTempDP[0] == '3') {
+    STOPstringTempDP[0] = '1';
+  }
+
+  if (STOPstringTempDP[4] == '1') {
+    STOPstringTempDP[4] = '_';
+  }
+  else if (STOPstringTempDP[4] == '3') {
+    STOPstringTempDP[4] = '2';
+  }
+
+
+  DisplayWord(STOPstringTemp, 500); //Anything above 10 should work
+  DisplayWordDP(STOPstringTempDP);
 }
 
 void incrementAlarm(void)
@@ -575,7 +534,7 @@ void checkButtons(void )
       /////////////////////////////  Time-Of-Alarm Adjustments  /////////////////////////////
 
       // Entering alarm mode:
-      // If Alarm button has been down 40 ms,
+      // If Alarm button has been down 200 ms,
       //    (to avoid displaying alarm if Alarm+Time buttons are pressed at the same time)
       //    the Set Time button is not down,
       //    and no other high-priority modes are enabled...
@@ -583,7 +542,7 @@ void checkButtons(void )
 
       if (( buttonMonitor & a5_alarmSetBtn) && (modeShowAlarmTime == 0))
         if ((( buttonMonitor & a5_timeSetBtn) == 0) && (modeShowText == 0))
-          if ( milliTemp >= (Btn1_AlrmSet_StartTime + 80 ))  // of those "ifs," Check hold-time LAST.
+          if ( milliTemp >= (Btn1_AlrmSet_StartTime + 200 ))  // of those "ifs," Check hold-time LAST.
           {
             modeShowAlarmTime = 1;
             RedrawNow = 1;
@@ -637,29 +596,18 @@ void checkButtons(void )
       /////////////////////////////  ENTERING & LEAVING STOPWATCH  /////////////////////////////
       if ((buttonMonitor & a5_timeSetBtn) && (buttonMonitor & a5_alarmSetBtn)) {
         if (showSTOP) {
-          for (int i = 0; i < 11; i++) {
-            STOPstring[i] = '0';
-          }
-
-          STOPcounting = 0;
+          STOPcounting = false;
           STOPshifted = 0;
           RedrawNow = 1;
+          startSTOP = 0;
+          //UpdateEE = 1;
           AlarmEnabled = !AlarmEnabled;
-          prevSTOP = milliTemp;
-          STOPpause = milliTemp;
         }
       }
       else if ((buttonMonitor & a5_plusBtn) && (buttonMonitor & a5_minusBtn) && !(buttonStateLast & a5_minusBtn)) {
         if (showSTOP) {
-          if (STOPlap) {
-            STOPlap = false;
-          }
-          else {
-            STOPlap = true;
-            for (int i = 0; i < 11; i++) {
-              STOPstringLap[i] = STOPstring[i];
-            }
-          }
+          changeSTOPlap = true;
+          STOPshifted--;
         }
       }
 
@@ -674,7 +622,6 @@ void checkButtons(void )
           else
           {
             showSTOP = true;
-            NextSTOPFlash = milliTemp + 500;
             RedrawNow = 1;
           }
         }
@@ -685,18 +632,22 @@ void checkButtons(void )
           RedrawNow = 1;
           if (STOPcounting)
           {
-            STOPcounting = 0;
+            STOPcounting = false;
             RedrawNow = 1;
             STOPpause = milliTemp;
           }
           else
           {
-            NextSTOPFlash = milliTemp + 500;
-            STOPcounting = 1;
-            prevSTOP = prevSTOP + (milliTemp - STOPpause);
+            STOPcounting = true;
+            if (startSTOP != 0) {
+              startSTOP = startSTOP + (milliTemp - STOPpause);
+            }
+            else {
+              startSTOP = milliTemp;
+            }
           }
+          //UpdateEE = 1;
           AlarmEnabled = !AlarmEnabled;
-          // Reverse normal action of TimeSet Button
         }
       }
       else if ((buttonMonitor & a5_plusBtn) && (!(buttonStateLast & a5_plusBtn)))
@@ -765,7 +716,7 @@ void checkButtons(void )
           }
           else if (TimeChanged == 0) { // If the time has just been adjusted, DO NOT change alarm status.
             RedrawNow = 1;
-            UpdateEE = 1;
+            EESaveSettings();
             if (AlarmEnabled)
               AlarmEnabled = 0;
             else
@@ -797,7 +748,7 @@ void checkButtons(void )
             {
               Brightness++;
               UpdateBrightness = 1;
-              UpdateEE = 1;
+              EESaveSettings();
             }
         }
       }
@@ -816,7 +767,7 @@ void checkButtons(void )
             {
               Brightness--;
               UpdateBrightness = 1;
-              UpdateEE = 1;
+              EESaveSettings();
             }
         }
       }
@@ -1344,18 +1295,13 @@ void setup() {
 }
 
 void loop() {
-
   milliTemp = millis() / 2;
   checkButtons();
 
-  if (showSTOP || STOPcounting)
+  if (showSTOP)
   {
     calculateSTOP();
-    if (showSTOP) {
-      DisplayWord(STOPstringTemp, 500);
-      DisplayWordDP(STOPstringTempDP);
-      delayMicroseconds(500);
-    }
+    delayMicroseconds(500);
     RedrawNow_NoFade = 1;
   }
 
@@ -2008,10 +1954,10 @@ void UpdateDisplay (byte forceUpdate) {
         DayBrightness += 1;
       else if (DayBrightness > BrightnessMax)
         DayBrightness -= 1;
-      char slovo[5] = {' ', ' ', DayBrightness / 10 + '0', DayBrightness % 10 + '0', ' '};
-      if (slovo[2] == '0')
-        slovo[2] == ' ';
-      DisplayWord(slovo, 500);
+      char displayTemp[5] = {' ', ' ', DayBrightness / 10 + '0', DayBrightness % 10 + '0', ' '};
+      if (displayTemp[2] == '0')
+        displayTemp[2] == ' ';
+      DisplayWord(displayTemp, 500);
       ExtendTextDisplay = 1;
     }
     else if (menuItem == NightBrighMenuItem)
@@ -2022,10 +1968,10 @@ void UpdateDisplay (byte forceUpdate) {
         NightBrightness += 1;
       else if (NightBrightness > BrightnessMax)
         NightBrightness -= 1;
-      char slovo[5] = {' ', ' ', NightBrightness / 10 + '0', NightBrightness % 10 + '0', ' '};
-      if (slovo[2] == '0')
-        slovo[2] == ' ';
-      DisplayWord(slovo, 500);
+      char displayTemp[5] = {' ', ' ', NightBrightness / 10 + '0', NightBrightness % 10 + '0', ' '};
+      if (displayTemp[2] == '0')
+        displayTemp[2] == ' ';
+      DisplayWord(displayTemp, 500);
       ExtendTextDisplay = 1;
     }
     else if (menuItem == NightStartMenuItem)
@@ -2036,24 +1982,24 @@ void UpdateDisplay (byte forceUpdate) {
         NightStart = 23;
       else if (NightStart > 23)
         NightStart = 0;
-      char slovo[5] = {NightStart / 10 + '0', NightStart % 10 + '0', ' ', ' ', ' '};
+      char displayTemp[5] = {NightStart / 10 + '0', NightStart % 10 + '0', ' ', ' ', ' '};
       if (!HourMode24 && NightStart > 12) {
-        slovo[0] -= 1;
-        slovo[1] -= 2;
-        slovo[2] = 'P';
-        slovo[3] = 'M';
-        if (slovo[1] < '0') {
-          slovo[0]--;
-          slovo[1] += 10;
+        displayTemp[0] -= 1;
+        displayTemp[1] -= 2;
+        displayTemp[2] = 'P';
+        displayTemp[3] = 'M';
+        if (displayTemp[1] < '0') {
+          displayTemp[0]--;
+          displayTemp[1] += 10;
         }
       }
       else if (!HourMode24) {
-        slovo[2] = 'A';
-        slovo[3] = 'M';
+        displayTemp[2] = 'A';
+        displayTemp[3] = 'M';
       }
-      if (slovo[0] == '0')
-        slovo[0] = ' ';
-      DisplayWord(slovo, 500);
+      if (displayTemp[0] == '0')
+        displayTemp[0] = ' ';
+      DisplayWord(displayTemp, 500);
       ExtendTextDisplay = 1;
     }
     else if (menuItem == NightEndMenuItem)
@@ -2064,26 +2010,25 @@ void UpdateDisplay (byte forceUpdate) {
         NightEnd = 23;
       else if (NightEnd > 23)
         NightEnd = 0;
-      char slovo[5] = {NightEnd / 10 + '0', NightEnd % 10 + '0', ' ', ' ', ' '};
+      char displayTemp[5] = {NightEnd / 10 + '0', NightEnd % 10 + '0', ' ', ' ', ' '};
       if (!HourMode24 && NightEnd > 12) {
-        slovo[0] -= 1;
-        slovo[1] -= 2;
-        slovo[2] = 'P';
-        slovo[3] = 'M';
-        if (slovo[1] < '0') {
-          slovo[0]--;
-          slovo[1] += 10;
+        displayTemp[0] -= 1;
+        displayTemp[1] -= 2;
+        displayTemp[2] = 'P';
+        displayTemp[3] = 'M';
+        if (displayTemp[1] < '0') {
+          displayTemp[0]--;
+          displayTemp[1] += 10;
         }
       }
       else if (!HourMode24) {
-        slovo[2] = 'A';
-        slovo[3] = 'M';
+        displayTemp[2] = 'A';
+        displayTemp[3] = 'M';
       }
-      if (slovo[0] == '0')
-        slovo[0] = ' ';
-      DisplayWord(slovo, 500);
+      if (displayTemp[0] == '0')
+        displayTemp[0] = ' ';
+      DisplayWord(displayTemp, 500);
       ExtendTextDisplay = 1;
-      Serial.println(slovo);
     }
     if (forceUpdate && ExtendTextDisplay)
     {
@@ -2644,6 +2589,18 @@ void EEReadSettings (void) {
     NightEnd = 6;
   else
     NightEnd = value - 100;
+
+  /*value = EEPROM.read(13);
+    if (value > 100)
+    startSTOP = 0;
+    else
+    startSTOP = value;
+
+    value = EEPROM.read(14);
+    if (value > 100)
+    STOPpause = 0;
+    else
+    STOPpause = value;*/
 }
 
 
@@ -2723,6 +2680,14 @@ void EESaveSettings (void) {
     value = EEPROM.read(12);
     if (NightEnd != (value - 100))
       a5writeEEPROM(12, NightEnd + 100);
+
+    /*value = EEPROM.read(13);
+      if (startSTOP != value)
+      a5writeEEPROM(13, startSTOP);
+
+      value = EEPROM.read(14);
+      if (STOPpause != value)
+      a5writeEEPROM(14, STOPpause);*/
 
     if (indicateEEPROMwritten) { // Blink LEDs off to indicate when we're writing to the EEPROM
       DisplayWord ("     ", 100);
