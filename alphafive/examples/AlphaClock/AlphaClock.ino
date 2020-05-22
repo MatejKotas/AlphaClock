@@ -600,6 +600,7 @@ void checkButtons(void )
           STOPshifted = 0;
           RedrawNow = 1;
           startSTOP = 0;
+          STOPpause = 0;
           //UpdateEE = 1;
           AlarmEnabled = !AlarmEnabled;
         }
