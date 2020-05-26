@@ -1327,18 +1327,6 @@ void loop() {
     }
   }
 
-  if ((night == 1 || night == 2) && (hour() >= NightEnd && hour() < NightStart))
-  {
-    night = 0;
-    Brightness = DayBrightness;
-    UpdateBrightness = 1;
-  }
-  else if ((night == 0 || night == 2) && (hour() >= NightStart || hour() < NightEnd))
-  {
-    night = 1;
-    Brightness = NightBrightness;
-    UpdateBrightness = 1;
-  }
   if (VCRmode)
   {
     if (modeShowText == 0) {
@@ -1386,10 +1374,24 @@ void loop() {
       EESaveSettings();
   }
 
-  // Check for alarm:
+  // Check for alarm and brightness changes:
   if  (milliTemp >= NextAlarmCheck)
   {
     NextAlarmCheck = milliTemp +  500;  // Check again in 1/2 second.
+
+    if ((night == 1 || night == 2) && (hour() >= NightEnd && hour() < NightStart))
+    {
+      night = 0;
+      Brightness = DayBrightness;
+      UpdateBrightness = 1;
+    }
+    else if ((night == 0 || night == 2) && (hour() >= NightStart || hour() < NightEnd))
+    {
+      night = 1;
+      Brightness = NightBrightness;
+      UpdateBrightness = 1;
+    }
+
     if (AlarmEnabled)  {
       byte hourTemp = hour();
       byte minTemp = minute();
