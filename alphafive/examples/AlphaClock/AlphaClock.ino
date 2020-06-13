@@ -258,27 +258,68 @@ void calculateSTOP()
 
     STOPstring[10] = (difference % ((long)100)) / 10; // Centiseconds
 
-    STOPstring[9] = (difference % ((long)1000)) / 100; // Deciseconds
+    difference /= 100;
 
-    STOPstring[8] = (difference % (((long)1000) * 10)) / 1000; // Seconds
+    STOPstring[9] = (difference % ((long)10)); // Deciseconds
 
-    STOPstring[7] = (difference % (((long)1000) * 10 * 6)) / (1000 * 10); // 10 Seconds
+    difference /= 10;
 
-    STOPstring[6] = (difference % (((long)1000) * 10 * 6 * 10)) / 100000; // Minutes
+    STOPstring[8] = (difference % ((long)10)); // Seconds
 
-    STOPstring[5] = (difference % (((long)1000) * 10 * 6 * 10 * 6)) / 1000000; // 10 Minutes
+    difference /= 10;
 
-    int hours = (difference % (((long)1000) * 10 * 6 * 10 * 6 * 24)) / 10000000; // Hour
+    STOPstring[7] = (difference % ((long)6)); // 10 Seconds
+
+    difference /= 6;
+
+    STOPstring[6] = (difference % ((long)10)); // Minutes
+
+    difference /= 10;
+
+    STOPstring[5] = (difference % ((long)6)); // 10 Minutes
+
+    difference /= 6;
+
+    int hours = (difference % ((long)24)); // Hour
+    difference /= 24;
+
     STOPstring[4] = hours % 10;
     hours -= STOPstring[4];
-
     STOPstring[3] = hours / 10; // 10 Hours
 
-    STOPstring[2] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7)) / 100000000; // Days
+    STOPstring[2] = (difference % 7); // Days
 
-    STOPstring[1] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10)) / 1000000000; // Weeks
+    difference /= 7;
 
-    STOPstring[0] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10 * 10)) / 10000000000; // 10 Weeks
+    STOPstring[1] = (difference % 10); // Weeks
+
+    difference /= 10;
+
+    STOPstring[0] = (difference % 10); // 10 Weeks
+
+    /*STOPstring[10] = (difference % ((long)100)) / 10; // Centiseconds
+
+      STOPstring[9] = (difference % ((long)1000)) / 100; // Deciseconds
+
+      STOPstring[8] = (difference % (((long)1000) * 10)) / 1000; // Seconds
+
+      STOPstring[7] = (difference % (((long)1000) * 10 * 6)) / (1000 * 10); // 10 Seconds
+
+      STOPstring[6] = (difference % (((long)1000) * 10 * 6 * 10)) / 100000; // Minutes
+
+      STOPstring[5] = (difference % (((long)1000) * 10 * 6 * 10 * 6)) / 1000000; // 10 Minutes
+
+      int hours = (difference % (((long)1000) * 10 * 6 * 10 * 6 * 24)) / 10000000; // Hour
+      STOPstring[4] = hours % 10;
+      hours -= STOPstring[4];
+
+      STOPstring[3] = hours / 10; // 10 Hours
+
+      STOPstring[2] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7)) / 100000000; // Days
+
+      STOPstring[1] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10)) / 1000000000; // Weeks
+
+      STOPstring[0] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10 * 10)) / 10000000000; // 10 Weeks*/
   }
 
   if (changeSTOPlap) {
@@ -1302,7 +1343,6 @@ void loop() {
   if (showSTOP)
   {
     calculateSTOP();
-    delayMicroseconds(500);
     RedrawNow_NoFade = 1;
   }
 
