@@ -171,6 +171,7 @@ const char STOPstringDP[11] = "_13212121__";
 int STOPshifted = 0;
 bool FlashSTOPSeperator = false;
 unsigned long NextSTOPFlash = 0;
+unsigned long STOPRecalcTimer = 0;
 
 // Brightness adjustment
 byte night = 2;
@@ -194,9 +195,7 @@ byte wordSequence;
 byte wordSequenceStep;
 byte modeShowText;
 
-
 byte RedrawNow, RedrawNow_NoFade;
-
 
 // Button Management:
 #define ButtonCheckInterval 20    // Time delay between responding to button state, ms
@@ -205,7 +204,6 @@ byte buttonStateLast;
 byte buttonMonitor;
 unsigned long Btn1_AlrmSet_StartTime, Btn2_TimeSet_StartTime, Btn3_Plus_StartTime, Btn4_Minus_StartTime;
 unsigned long NextButtonCheck, LastButtonPress;
-
 
 byte UpdateAlarmState, UpdateBrightness;
 byte AlarmTimeChanged, TimeChanged;
@@ -240,130 +238,117 @@ byte SoundSequence;
 
 void calculateSTOP()
 {
-  char STOPstring[11] = "00000000000"; // Value dosn't matter
-  if (STOPlap) {
-    for (int i = 0; i < 11; i++) {
-      STOPstring[i] = STOPlapstring[i];
-    }
-  }
-  else {
-    unsigned long difference = 0;
+  if (milliTemp >= STOPRecalcTimer)
+  {
+    RedrawNow_NoFade = 1;
+    char STOPstring[11] = "00000000000"; // Value dosn't matter
 
-    if (STOPcounting) {
-      difference = milliTemp - startSTOP;
+    STOPRecalcTimer = milliTemp + 10;
+
+    if (STOPlap && !changeSTOPlap) {
+      for (int i = 0; i < 11; i++) {
+        STOPstring[i] = STOPlapstring[i];
+      }
+      STOPRecalcTimer = milliTemp + 10000000; //Some big value
     }
     else {
-      difference = STOPpause - startSTOP;
-    }
+      unsigned long difference = 0;
 
-    STOPstring[10] = (difference % ((long)100)) / 10; // Centiseconds
+      if (STOPcounting) {
+        difference = milliTemp - startSTOP;
+      }
+      else {
+        difference = STOPpause - startSTOP;
+        STOPRecalcTimer = milliTemp + 10000000; //Some big value
+      }
 
-    difference /= 100;
+      STOPstring[10] = (difference % 100) / 10; // Centiseconds
 
-    STOPstring[9] = (difference % ((long)10)); // Deciseconds
+      difference /= 100;
 
-    difference /= 10;
+      STOPstring[9] = (difference % 10); // Deciseconds
 
-    STOPstring[8] = (difference % ((long)10)); // Seconds
+      difference /= 10;
 
-    difference /= 10;
+      STOPstring[8] = (difference % 10); // Seconds
 
-    STOPstring[7] = (difference % ((long)6)); // 10 Seconds
+      difference /= 10;
 
-    difference /= 6;
+      STOPstring[7] = (difference % 6); // 10 Seconds
 
-    STOPstring[6] = (difference % ((long)10)); // Minutes
+      difference /= 6;
 
-    difference /= 10;
+      STOPstring[6] = (difference % 10); // Minutes
 
-    STOPstring[5] = (difference % ((long)6)); // 10 Minutes
+      difference /= 10;
 
-    difference /= 6;
+      STOPstring[5] = (difference % 6); // 10 Minutes
 
-    int hours = (difference % ((long)24)); // Hour
-    difference /= 24;
+      difference /= 6;
 
-    STOPstring[4] = hours % 10;
-    hours -= STOPstring[4];
-    STOPstring[3] = hours / 10; // 10 Hours
+      int hours = (difference % 24); // Hour
+      difference /= 24;
 
-    STOPstring[2] = (difference % 7); // Days
-
-    difference /= 7;
-
-    STOPstring[1] = (difference % 10); // Weeks
-
-    difference /= 10;
-
-    STOPstring[0] = (difference % 10); // 10 Weeks
-
-    /*STOPstring[10] = (difference % ((long)100)) / 10; // Centiseconds
-
-      STOPstring[9] = (difference % ((long)1000)) / 100; // Deciseconds
-
-      STOPstring[8] = (difference % (((long)1000) * 10)) / 1000; // Seconds
-
-      STOPstring[7] = (difference % (((long)1000) * 10 * 6)) / (1000 * 10); // 10 Seconds
-
-      STOPstring[6] = (difference % (((long)1000) * 10 * 6 * 10)) / 100000; // Minutes
-
-      STOPstring[5] = (difference % (((long)1000) * 10 * 6 * 10 * 6)) / 1000000; // 10 Minutes
-
-      int hours = (difference % (((long)1000) * 10 * 6 * 10 * 6 * 24)) / 10000000; // Hour
       STOPstring[4] = hours % 10;
       hours -= STOPstring[4];
-
       STOPstring[3] = hours / 10; // 10 Hours
 
-      STOPstring[2] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7)) / 100000000; // Days
+      STOPstring[2] = (difference % 7); // Days
 
-      STOPstring[1] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10)) / 1000000000; // Weeks
+      difference /= 7;
 
-      STOPstring[0] = (difference % (1000 * 10 * 6 * 10 * 6 * 24 * 7 * 10 * 10)) / 10000000000; // 10 Weeks*/
-  }
+      STOPstring[1] = (difference % 10); // Weeks
 
-  if (changeSTOPlap) {
-    for (int i = 0; i < 11; i++) {
-      STOPlapstring[i] = STOPstring[i];
+      difference /= 10;
+
+      STOPstring[0] = (difference % 10); // 10 Weeks
     }
-    STOPlap = !STOPlap;
-    changeSTOPlap = false;
+    if (changeSTOPlap) {
+      for (int i = 0; i < 11; i++) {
+        STOPlapstring[i] = STOPstring[i];
+      }
+      STOPlap = !STOPlap;
+      changeSTOPlap = false;
+    }
+
+    char STOPstringTemp[5] = "00000";
+    for (int i = 0; i < 5; i++) {
+      STOPstringTemp[i] = STOPstring[i + (6 - STOPshifted)] + '0';
+    }
+
+    DisplayWord(STOPstringTemp, 600);
   }
 
-  if (milliTemp > NextSTOPFlash && STOPcounting) {
+  if (milliTemp > NextSTOPFlash) {
+    RedrawNow_NoFade = 1;
     FlashSTOPSeperator = !FlashSTOPSeperator;
     NextSTOPFlash = milliTemp + 500;
-  }
+    STOPRecalcTimer = milliTemp;
 
-  char STOPstringTemp[5] = "00000";
-  char STOPstringTempDP[5] = "_____";
-  for (int i = 0; i < 5; i++) {
-    STOPstringTemp[i] = STOPstring[i + (6 - STOPshifted)] + '0';
-  }
+    char STOPstringTempDP[5] = "_____";
 
-  if (FlashSTOPSeperator || !STOPcounting) {
-    for (int i = 0; i < 5; i++) {
-      STOPstringTempDP[i] = STOPstringDP[i + (6 - STOPshifted)];
+    if (FlashSTOPSeperator || !STOPcounting) {
+      for (int i = 0; i < 5; i++) {
+        STOPstringTempDP[i] = STOPstringDP[i + (6 - STOPshifted)];
+      }
     }
-  }
 
-  if (STOPstringTempDP[0] == '2') {
-    STOPstringTempDP[0] = '_';
-  }
-  else if (STOPstringTempDP[0] == '3') {
-    STOPstringTempDP[0] = '1';
-  }
+    if (STOPstringTempDP[0] == '2') {
+      STOPstringTempDP[0] = '_';
+    }
+    else if (STOPstringTempDP[0] == '3') {
+      STOPstringTempDP[0] = '1';
+    }
 
-  if (STOPstringTempDP[4] == '1') {
-    STOPstringTempDP[4] = '_';
-  }
-  else if (STOPstringTempDP[4] == '3') {
-    STOPstringTempDP[4] = '2';
-  }
+    if (STOPstringTempDP[4] == '1') {
+      STOPstringTempDP[4] = '_';
+    }
+    else if (STOPstringTempDP[4] == '3') {
+      STOPstringTempDP[4] = '2';
+    }
 
-
-  DisplayWord(STOPstringTemp, 500); //Anything above 10 should work
-  DisplayWordDP(STOPstringTempDP);
+    DisplayWordDP(STOPstringTempDP);
+  }
 }
 
 void incrementAlarm(void)
@@ -409,7 +394,7 @@ void TurnOffAlarm(void)
   }
 }
 
-void checkButtons(void )
+void checkButtons(void)
 {
   buttonMonitor |= a5GetButtons();
 
@@ -639,43 +624,43 @@ void checkButtons(void )
         if (showSTOP) {
           STOPcounting = false;
           STOPshifted = 0;
-          RedrawNow = 1;
           startSTOP = 0;
           STOPpause = 0;
-          //UpdateEE = 1;
-          AlarmEnabled = !AlarmEnabled;
+          NextSTOPFlash = milliTemp;
         }
       }
       else if ((buttonMonitor & a5_plusBtn) && (buttonMonitor & a5_minusBtn) && !(buttonStateLast & a5_minusBtn)) {
         if (showSTOP) {
           changeSTOPlap = true;
           STOPshifted--;
+          STOPRecalcTimer = milliTemp;
         }
       }
 
-      else if (!(buttonMonitor & a5_alarmSetBtn) && (buttonStateLast & a5_alarmSetBtn) && !(buttonMonitor & a5_timeSetBtn)) {
+      else if ((!(buttonMonitor & a5_alarmSetBtn)) && (buttonStateLast & a5_alarmSetBtn) && (!(buttonMonitor & a5_timeSetBtn))) {
         if (!modeShowAlarmTime) {
           if (showSTOP)
           {
             showSTOP = false;
             RedrawNow = 1;
-            DisplayWordDP("_____");
           }
           else
           {
             showSTOP = true;
-            RedrawNow = 1;
+            NextSTOPFlash = milliTemp;
+            STOPRecalcTimer = milliTemp;
           }
         }
       }
       else if ((buttonMonitor & a5_timeSetBtn) && (!(buttonStateLast & a5_timeSetBtn)))
       {
         if (showSTOP) {
-          RedrawNow = 1;
+          STOPRecalcTimer = milliTemp;
+          NextSTOPFlash = milliTemp;
+
           if (STOPcounting)
           {
             STOPcounting = false;
-            RedrawNow = 1;
             STOPpause = milliTemp;
           }
           else
@@ -688,20 +673,22 @@ void checkButtons(void )
               startSTOP = milliTemp;
             }
           }
-          //UpdateEE = 1;
-          AlarmEnabled = !AlarmEnabled;
         }
       }
       else if ((buttonMonitor & a5_plusBtn) && (!(buttonStateLast & a5_plusBtn)))
       {
         if (STOPshifted < 6 && showSTOP) {
           STOPshifted++;
+          STOPRecalcTimer = milliTemp;
+          NextSTOPFlash = milliTemp;
         }
       }
       else if ((buttonMonitor & a5_minusBtn) && (!(buttonStateLast & a5_minusBtn)))
       {
         if (STOPshifted > 0 && showSTOP) {
           STOPshifted--;
+          STOPRecalcTimer = milliTemp;
+          NextSTOPFlash = milliTemp;
         }
       }
 
@@ -732,7 +719,7 @@ void checkButtons(void )
       }
 
       // Check to see if AlarmSet button was JUST released::
-      if ( ((buttonMonitor & a5_alarmSetBtn) == 0) && (buttonStateLast & a5_alarmSetBtn))
+      if ( ((buttonMonitor & a5_alarmSetBtn) == 0) && (buttonStateLast & a5_alarmSetBtn) && !showSTOP)
       {
         if (modeShowAlarmTime && holdDebounce) {
           modeShowAlarmTime = 0;
@@ -1343,7 +1330,6 @@ void loop() {
   if (showSTOP)
   {
     calculateSTOP();
-    RedrawNow_NoFade = 1;
   }
 
   if (UpdateBrightness)
