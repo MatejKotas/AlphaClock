@@ -323,9 +323,12 @@ void calculateSTOP()
     RedrawNow_NoFade = 1;
     FlashSTOPSeperator = !FlashSTOPSeperator;
     NextSTOPFlash = milliTemp + 500;
-    STOPRecalcTimer = milliTemp;
 
     char STOPstringTempDP[5] = "_____";
+
+    if (!STOPcounting) {
+      NextSTOPFlash = milliTemp + 10000000;
+    }
 
     if (FlashSTOPSeperator || !STOPcounting) {
       for (int i = 0; i < 5; i++) {
@@ -1372,7 +1375,6 @@ void loop() {
     }
   }
 
-
   if (RedrawNow || RedrawNow_NoFade)
   {
     NextClockUpdate = milliTemp + 10; // Reset auto-redraw timer.
@@ -1380,6 +1382,10 @@ void loop() {
     UpdateDisplay (1);   // Force redraw
     if (RedrawNow_NoFade)   // Explicitly do not fade.  Takes priority over redraw with fade.
       a5_FadeStage = -1;
+
+    if (NightLightType >= 4)  // Only in pulse mode do we need to regularly update
+      updateNightLight();
+
     a5LoadNextFadeStage();
     a5loadVidBuf_fromOSB();
 
