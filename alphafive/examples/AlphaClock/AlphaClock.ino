@@ -55,16 +55,6 @@
 
   ------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -351,6 +341,14 @@ void calculateSTOP()
     }
 
     DisplayWordDP(STOPstringTempDP);
+    if (STOPlap) {
+      char temp[5] = "00000";
+      for (int i = 0; i < 5; i++) {
+        temp[i] = STOPlapstring[i + (6 - STOPshifted)] + '0';
+      }
+
+      DisplayWord(temp, 600);
+    }
   }
 }
 
@@ -630,6 +628,7 @@ void checkButtons(void)
           startSTOP = 0;
           STOPpause = 0;
           NextSTOPFlash = milliTemp;
+          STOPRecalcTimer = milliTemp;
         }
       }
       else if ((buttonMonitor & a5_plusBtn) && (buttonMonitor & a5_minusBtn) && !(buttonStateLast & a5_minusBtn)) {
@@ -699,7 +698,7 @@ void checkButtons(void)
       // Check to see if both S1 and S2 are both currently held down:
       if (( buttonMonitor & a5_alarmSetBtn) && ( buttonMonitor & a5_timeSetBtn))
       {
-        if ( (milliTemp >= (Btn1_AlrmSet_StartTime + 2 * HoldDownTime )) && (milliTemp >= (Btn2_TimeSet_StartTime + 2 * HoldDownTime )))
+        if ((milliTemp >= (Btn1_AlrmSet_StartTime + 2 * HoldDownTime )) && (milliTemp >= (Btn2_TimeSet_StartTime + 2 * HoldDownTime )) && !showSTOP)
         {
           Btn1_AlrmSet_StartTime = milliTemp;  // Reset hold-down timer
           Btn2_TimeSet_StartTime = milliTemp;   // Reset hold-down timer
@@ -707,7 +706,6 @@ void checkButtons(void)
           if (modeLEDTest) // If we are currently in the LED Test mode,
           {
             modeLEDTest = 0;  //  Exit LED Test Mode
-            showSTOP = false;
             RedrawNow = 1;
             DisplayWord ("-END-", 1500);
           }
@@ -746,15 +744,10 @@ void checkButtons(void)
           if ((alarmNow) || (snoozed)) { // Just Turn Off Alarm
             TurnOffAlarm();
           }
-          else if (TimeChanged == 0) { // If the time has just been adjusted, DO NOT change alarm status.
+          else if (TimeChanged == 0 && !showSTOP) { // If the time has just been adjusted, DO NOT change alarm status.
             RedrawNow = 1;
+            AlarmEnabled = !AlarmEnabled;
             EESaveSettings();
-            if (AlarmEnabled)
-              AlarmEnabled = 0;
-            else
-            {
-              AlarmEnabled = 1;
-            }
           }
           else
           {
@@ -1384,7 +1377,7 @@ void loop() {
       a5_FadeStage = -1;
 
     if (NightLightType >= 4)  // Only in pulse mode do we need to regularly update
-      updateNightLight();
+      updateNightLight(); // For stopwatch
 
     a5LoadNextFadeStage();
     a5loadVidBuf_fromOSB();
@@ -1728,6 +1721,10 @@ void UpdateDisplay (byte forceUpdate) {
       }
     }
   }
+  else if (showSTOP) {
+
+  }
+
   else  if (modeLEDTest)  //LED Test Mode
   {
     if (milliTemp > DisplayWordEndTime)
@@ -1763,9 +1760,6 @@ void UpdateDisplay (byte forceUpdate) {
 
   }
 
-  else if (showSTOP) {
-
-  }
   else if (modeShowMenu)
   {
 
